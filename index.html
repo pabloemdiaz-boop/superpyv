@@ -296,6 +296,7 @@ body{ background:var(--app-bg); }
   </div>
   <div class="topbar-actions">
     <button class="tbtn" id="btn-edit" onclick="toggleEdit()" aria-label="Activar modo edición"><i class="ti ti-pencil"></i> Editar</button>
+    <button class="tbtn" onclick="orderLayout()" aria-label="Ordenar categorías"><i class="ti ti-layout-grid-add"></i> Ordenar</button>
     <button class="tbtn danger" onclick="clearAll()" aria-label="Limpiar productos marcados"><i class="ti ti-circle-x"></i> Limpiar</button>
   </div>
 </div>
@@ -382,8 +383,8 @@ const DEFAULT_ITEMS = {
 
 
 // ── HELPERS ───────────────────────────────────────────
-const STORAGE_KEY = 'mis-compras-v6-layout-fijo';
-const LAYOUT_VERSION = 6;
+const STORAGE_KEY = 'mis-compras-v6-modelo-snap';
+const OLD_STORAGE_KEY = 'mis-compras-v4';
 const saveNow = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 let saveTimer = null;
 
@@ -439,8 +440,7 @@ function normalizeState(raw) {
   return {
     items: normalizedItems,
     sections,
-    layout: next.layout && typeof next.layout === 'object' ? next.layout : {},
-    layoutVersion: next.layoutVersion || 0
+    layout: next.layout && typeof next.layout === 'object' ? next.layout : {}
   };
 }
 
@@ -462,15 +462,25 @@ function updateColumnMode(card, width) {
 
 function defaultLayout() {
   const layout = {};
+  const positions = [
+    ['almacen', 24, 24, 480, 456],
+    ['carniceria', 528, 24, 240, 312],
+    ['fiambr', 792, 24, 240, 216],
+    ['pescad', 1056, 24, 240, 216],
+    ['verduleria', 528, 360, 480, 408],
+    ['dietetica', 24, 504, 480, 312],
+    ['limpieza', 1032, 264, 480, 456],
+    ['bano', 24, 840, 240, 312],
+    ['farmacia', 288, 840, 240, 264],
+    ['varios', 552, 792, 240, 264]
+  ];
+  const byKey = Object.fromEntries(positions.map(([key,x,y,w,h]) => [key,{x:snap(x),y:snap(y),w:snapSize(w,MIN_CARD_W),h:snapSize(h,MIN_CARD_H)}]));
   state.sections.forEach((sec, i) => {
-    const col = i % COLS_PER_ROW;
-    const row = Math.floor(i / COLS_PER_ROW);
-    const items = sectionItems(sec.key).length;
-    layout[sec.key] = {
-      x: snap(col * (COL + GAP) + GAP),
-      y: snap(row * 336 + GAP),
+    layout[sec.key] = byKey[sec.key] || {
+      x: snap(24 + (i % COLS_PER_ROW) * (COL + GAP)),
+      y: snap(24 + Math.floor(i / COLS_PER_ROW) * 336),
       w: snapSize(COL, MIN_CARD_W),
-      h: snapSize(Math.max(MIN_CARD_H, HEADER + items * ROW + 16), MIN_CARD_H)
+      h: snapSize(Math.max(MIN_CARD_H, HEADER + sectionItems(sec.key).length * ROW + 16), MIN_CARD_H)
     };
   });
   return layout;
@@ -479,14 +489,9 @@ function defaultLayout() {
 // ── STORAGE ───────────────────────────────────────────
 function load() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY);
     state = saved ? normalizeState(JSON.parse(saved)) : normalizeState({});
-    // En esta versión no importamos layouts viejos: evitamos que GitHub/localStorage
-    // conserve posiciones y anchos de versiones anteriores.
-    if (!saved || state.layoutVersion !== LAYOUT_VERSION) {
-      state.layout = defaultLayout();
-      state.layoutVersion = LAYOUT_VERSION;
-    }
+    if (!Object.keys(state.layout || {}).length) state.layout = defaultLayout();
     saveNow();
   } catch(e) {
     state = normalizeState({});

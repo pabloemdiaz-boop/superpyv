@@ -240,7 +240,7 @@ body{ background:var(--app-bg); }
   opacity:1;
   pointer-events:auto;
 }
-.item-name{ min-width:0; font-size:13.5px; }
+.item-name{ min-width:0; font-size:14px; }
 .item-actions{
   display:flex;
   width:62px;
@@ -296,6 +296,7 @@ body{ background:var(--app-bg); }
   </div>
   <div class="topbar-actions">
     <button class="tbtn" id="btn-edit" onclick="toggleEdit()" aria-label="Activar modo edición"><i class="ti ti-pencil"></i> Editar</button>
+    <button class="tbtn" onclick="resetLayout()" aria-label="Restaurar distribución"><i class="ti ti-layout-grid-add"></i> Ordenar</button>
     <button class="tbtn danger" onclick="clearAll()" aria-label="Limpiar productos marcados"><i class="ti ti-circle-x"></i> Limpiar</button>
   </div>
 </div>
@@ -382,8 +383,8 @@ const DEFAULT_ITEMS = {
 
 
 // ── HELPERS ───────────────────────────────────────────
-const STORAGE_KEY = 'mis-compras-v5';
-const OLD_STORAGE_KEY = 'mis-compras-v4';
+const STORAGE_KEY = 'mis-compras-modelo-snap-pablo-v1';
+const OLD_STORAGE_KEY = null;
 const saveNow = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 let saveTimer = null;
 
@@ -449,8 +450,8 @@ let editMode = false;
 
 // layout per card: { x, y, w, h }
 const GRID = 24;
-const COL = 240, ROW = 28, HEADER = 36, GAP = GRID, COLS_PER_ROW = 4;
-const MIN_CARD_W = 192, MIN_CARD_H = 96, TWO_COL_W = 384;
+const COL = 336, ROW = 44, HEADER = 38, GAP = GRID, COLS_PER_ROW = 4;
+const MIN_CARD_W = 312, MIN_CARD_H = 120, TWO_COL_W = 600;
 function snap(value, step = GRID) { return Math.max(0, Math.round(value / step) * step); }
 function snapSize(value, min, step = GRID) { return Math.max(min, Math.round(value / step) * step); }
 function updateColumnMode(card, width) {
@@ -460,16 +461,35 @@ function updateColumnMode(card, width) {
 }
 
 function defaultLayout() {
+  // Distribución base fija del modelo: dos listas grandes al frente y las listas chicas apiladas.
+  // Importante: no se recalcula por orden automático para evitar que GitHub/browser cambie columnas.
+  const base = {
+    almacen:    { x:  48, y:  48, w: 672, h: 720 },
+    verduleria: { x: 768, y:  48, w: 672, h: 720 },
+    carniceria: { x:1488, y:  48, w: 360, h: 384 },
+    fiambr:     { x:1488, y: 480, w: 360, h: 312 },
+    pescad:     { x:1896, y:  48, w: 360, h: 264 },
+    dietetica:  { x:1896, y: 360, w: 360, h: 456 },
+    limpieza:   { x:  48, y: 816, w: 672, h: 720 },
+    bano:       { x: 768, y: 816, w: 360, h: 456 },
+    farmacia:   { x:1176, y: 816, w: 360, h: 456 },
+    varios:     { x:1584, y: 840, w: 360, h: 384 }
+  };
+
   const layout = {};
   state.sections.forEach((sec, i) => {
-    const col = i % COLS_PER_ROW;
-    const row = Math.floor(i / COLS_PER_ROW);
-    const items = sectionItems(sec.key).length;
+    const fallback = {
+      x: 48 + (i % 3) * 408,
+      y: 48 + Math.floor(i / 3) * 456,
+      w: 360,
+      h: Math.max(MIN_CARD_H, HEADER + sectionItems(sec.key).length * ROW + 16)
+    };
+    const lo = base[sec.key] || fallback;
     layout[sec.key] = {
-      x: snap(col * (COL + GAP) + GAP),
-      y: snap(row * 336 + GAP),
-      w: snapSize(COL, MIN_CARD_W),
-      h: snapSize(Math.max(MIN_CARD_H, HEADER + items * ROW + 16), MIN_CARD_H)
+      x: snap(lo.x),
+      y: snap(lo.y),
+      w: snapSize(lo.w, MIN_CARD_W),
+      h: snapSize(lo.h, MIN_CARD_H)
     };
   });
   return layout;
@@ -478,7 +498,7 @@ function defaultLayout() {
 // ── STORAGE ───────────────────────────────────────────
 function load() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY);
     state = saved ? normalizeState(JSON.parse(saved)) : normalizeState({});
     if (!Object.keys(state.layout || {}).length) state.layout = defaultLayout();
     saveNow();
@@ -826,6 +846,7 @@ function delItem(sec,idx){
   sectionItems(sec).splice(idx,1);
   renderAll(); save();
 }
+function resetLayout(){ state.layout = defaultLayout(); renderAll(); save({immediate:true}); showToast('↔️ Distribución restaurada'); }
 function clearAll(){ if(!confirm('¿Limpiar todos los tildados?')) return; state.sections.forEach(sec=>sectionItems(sec.key).forEach(item=>item.checked=false)); renderAll(); save(); }
 function addItem(){
   const input=document.getElementById('add-input');

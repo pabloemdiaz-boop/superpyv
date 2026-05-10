@@ -240,7 +240,7 @@ body{ background:var(--app-bg); }
   opacity:1;
   pointer-events:auto;
 }
-.item-name{ min-width:0; font-size:14px; }
+.item-name{ min-width:0; font-size:13.5px; }
 .item-actions{
   display:flex;
   width:62px;
@@ -295,8 +295,8 @@ body{ background:var(--app-bg); }
     <span class="badge" id="badge">0 marcados</span>
   </div>
   <div class="topbar-actions">
+    <button class="tbtn" onclick="resetLayout()" aria-label="Ordenar categorías"><i class="ti ti-layout-dashboard"></i> Ordenar</button>
     <button class="tbtn" id="btn-edit" onclick="toggleEdit()" aria-label="Activar modo edición"><i class="ti ti-pencil"></i> Editar</button>
-    <button class="tbtn" onclick="resetLayout()" aria-label="Restaurar distribución"><i class="ti ti-layout-grid-add"></i> Ordenar</button>
     <button class="tbtn danger" onclick="clearAll()" aria-label="Limpiar productos marcados"><i class="ti ti-circle-x"></i> Limpiar</button>
   </div>
 </div>
@@ -356,35 +356,34 @@ body{ background:var(--app-bg); }
 <script>
 // ── DEFAULT DATA ──────────────────────────────────────
 const DEFAULT_SECTIONS = [
-  {key:'almacen',    label:'Almacén',       icon:'ti-building-store'},
+  {key:'almacen',    label:'Supermercado',   icon:'ti-building-store'},
   {key:'carniceria', label:'Carnicería',     icon:'ti-meat'},
   {key:'fiambr',     label:'Fiambrería',     icon:'ti-cheese'},
   {key:'pescad',     label:'Pescadería',     icon:'ti-fish'},
   {key:'verduleria', label:'Verdulería',     icon:'ti-leaf'},
   {key:'dietetica',  label:'Dietética',      icon:'ti-seeding'},
-  {key:'limpieza',   label:'Limpieza',       icon:'ti-sparkles'},
-  {key:'bano',       label:'Baño / Higiene', icon:'ti-bath'},
-  {key:'farmacia',   label:'Farmacia',       icon:'ti-pill'},
-  {key:'varios',     label:'Varios',         icon:'ti-package'}
+  {key:'farmacia',   label:'Farmacia',       icon:'ti-pill'}
 ];
 const DEFAULT_ITEMS = {
-  almacen:['Queso rallado','Yogur','Aceite de oliva','Ricota','Salsa de tomate','Salsa de soja','Café','Filtro café','Yerba','Rapiditas integral','Rapiditas grandes','Coca light','Fritolin','Papel higiénico','Agua chica','Soda','Tapa de tarta','Tapas de empanadas','Pasta de maní','Porotos','Garbanzos','Aceite','Vinagre','Ketchup','Mayonesa','Sal gruesa','Sal fina','Pimienta','Ají molido','Bicarbonato de sodio','Atún'],
+  almacen:[
+    'Queso rallado','Yogur','Aceite de oliva','Ricota','Salsa de tomate','Salsa de soja','Café','Filtro café','Yerba','Rapiditas integral','Rapiditas grandes','Coca light','Fritolin','Papel higiénico','Agua chica','Soda','Tapa de tarta','Tapas de empanadas','Pasta de maní','Porotos','Garbanzos','Aceite','Vinagre','Ketchup','Mayonesa','Sal gruesa','Sal fina','Pimienta','Ají molido','Bicarbonato de sodio','Atún',
+    'Skip blanco','Skip color','Suavizante','Vanish blanco','Vanish negro','Toallitas ayudín','Harpic baño','Lavandina','Limpiavidrios','Cif aerosol','Cif antigrasa','Cif crema','Detergente','Virulana','Procenex pisos','Escobillón','Guantes','Repasador','Trapo de piso','Esponja metálica','Esponja normal','Plumero','Guantes jardín','Blem','Bolsas consorcio','Rollo cocina','Ziploc','Perfumito hogar',
+    'Desodorante','Shampoo','Dove líquido','Dove manos','Enjuague','Hilo dental','Algodón','Pasta de dientes','Esponja de baño','Cepillo de dientes','Tintura',
+    'Pilas AAA','Pilas AA','Caramelos','Pack cerveza','Cerveza s/a','Flan SER','Arroz con leche','Crema','Agua (grande)'
+  ],
   carniceria:['Carne picada','Vacío','Pechuga de pollo','Milanesa de carne','Milanesa de pollo','Bola de lomo','Hamburguesas','Milanesa de cerdo'],
   fiambr:['Lomito 400g','Queso cremoso 500g','Queso duro 500g','Jamón cocido 400g','Roquefort'],
   pescad:['Salmón','Trucha','Merluza','Milanesa de pescado'],
   verduleria:['Maple de huevos (1u)','Lechuga mantecosa (1u)','Tomate redondo (3u)','Cebolla blanca (3u)','Papa (1kg)','Batata (1kg)','Lechuga morada (1u)','Espinaca (2 atados)','Rúcula (2 atados)','Kale (1 atado)','Repollo colorado (1 chico)','Zanahoria (1kg)','Pepino (2u)','Hinojo (1u)','Cebolla morada (3u)','Remolacha (3-4u)','Zapallo anco (1 chico)','Choclo (4u)','Tomates cherry (½kg)','Palta (3u)','Ajo (1u)','Jengibre (1 pedazo)','Limón (4-5u)','Apio (2u)','Perejil (1u)'],
   dietetica:['Duraznos disecados','Ciruelas disecadas','Tomates secos','Frutos secos','Semillas de sésamo','Dátiles','Semillas de chía','Bananas disecadas','Coco','Milanesa de soja','Castañas bañadas'],
-  limpieza:['Skip blanco','Skip color','Suavizante','Vanish blanco','Vanish negro','Toallitas ayudín','Harpic baño','Lavandina','Limpiavidrios','Cif aerosol','Cif antigrasa','Cif crema','Detergente','Virulana','Procenex pisos','Escobillón','Guantes','Repasador','Trapo de piso','Esponja metálica','Esponja normal','Plumero','Guantes jardín','Blem','Bolsas consorcio','Rollo cocina','Ziploc','Perfumito hogar'],
-  bano:['Desodorante','Shampoo','Dove líquido','Dove manos','Enjuague','Hilo dental','Algodón','Pasta de dientes','Esponja de baño','Cepillo de dientes','Tintura'],
-  farmacia:['Corega tabs','Diclofenac','Ibuprofeno','Omeprazol','Off','Protector solar','Tafirol','Toallitas húmedas','Valerina','Vick'],
-  varios:['Pilas AAA','Pilas AA','Caramelos','Pack cerveza','Cerveza s/a','Flan SER','Arroz con leche','Crema','Agua (grande)']
+  farmacia:['Corega tabs','Diclofenac','Ibuprofeno','Omeprazol','Off','Protector solar','Tafirol','Toallitas húmedas','Valerina','Vick']
 };
 
 
 
 // ── HELPERS ───────────────────────────────────────────
-const STORAGE_KEY = 'mis-compras-modelo-snap-pablo-v1';
-const OLD_STORAGE_KEY = null;
+const STORAGE_KEY = 'mis-compras-v7-super-unificado';
+const OLD_STORAGE_KEY = 'mis-compras-v7-no-migrar';
 const saveNow = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 let saveTimer = null;
 
@@ -437,10 +436,17 @@ function normalizeState(raw) {
     });
   }
 
+  const allowedKeys = new Set(sections.map(sec => sec.key));
+  const cleanedLayout = {};
+  const rawLayout = next.layout && typeof next.layout === 'object' ? next.layout : {};
+  Object.entries(rawLayout).forEach(([key, value]) => {
+    if (allowedKeys.has(key)) cleanedLayout[key] = value;
+  });
+
   return {
     items: normalizedItems,
     sections,
-    layout: next.layout && typeof next.layout === 'object' ? next.layout : {}
+    layout: cleanedLayout
   };
 }
 
@@ -450,8 +456,8 @@ let editMode = false;
 
 // layout per card: { x, y, w, h }
 const GRID = 24;
-const COL = 336, ROW = 44, HEADER = 38, GAP = GRID, COLS_PER_ROW = 4;
-const MIN_CARD_W = 312, MIN_CARD_H = 120, TWO_COL_W = 600;
+const COL = 240, ROW = 28, HEADER = 36, GAP = GRID, COLS_PER_ROW = 4;
+const MIN_CARD_W = 192, MIN_CARD_H = 96, TWO_COL_W = 384;
 function snap(value, step = GRID) { return Math.max(0, Math.round(value / step) * step); }
 function snapSize(value, min, step = GRID) { return Math.max(min, Math.round(value / step) * step); }
 function updateColumnMode(card, width) {
@@ -461,46 +467,23 @@ function updateColumnMode(card, width) {
 }
 
 function defaultLayout() {
-  // Distribución base fija del modelo: dos listas grandes al frente y las listas chicas apiladas.
-  // Importante: no se recalcula por orden automático para evitar que GitHub/browser cambie columnas.
-  const base = {
-    almacen:    { x:  48, y:  48, w: 672, h: 720 },
-    verduleria: { x: 768, y:  48, w: 672, h: 720 },
-    carniceria: { x:1488, y:  48, w: 360, h: 384 },
-    fiambr:     { x:1488, y: 480, w: 360, h: 312 },
-    pescad:     { x:1896, y:  48, w: 360, h: 264 },
-    dietetica:  { x:1896, y: 360, w: 360, h: 456 },
-    limpieza:   { x:  48, y: 816, w: 672, h: 720 },
-    bano:       { x: 768, y: 816, w: 360, h: 456 },
-    farmacia:   { x:1176, y: 816, w: 360, h: 456 },
-    varios:     { x:1584, y: 840, w: 360, h: 384 }
+  return {
+    almacen:    { x: 24,  y: 24,  w: 672, h: 624 },
+    carniceria: { x: 720, y: 24,  w: 288, h: 384 },
+    fiambr:     { x: 1032,y: 24,  w: 288, h: 288 },
+    pescad:     { x: 1032,y: 336, w: 288, h: 240 },
+    verduleria: { x: 24,  y: 672, w: 672, h: 552 },
+    dietetica:  { x: 720, y: 432, w: 288, h: 432 },
+    farmacia:   { x: 1032,y: 600, w: 288, h: 360 }
   };
-
-  const layout = {};
-  state.sections.forEach((sec, i) => {
-    const fallback = {
-      x: 48 + (i % 3) * 408,
-      y: 48 + Math.floor(i / 3) * 456,
-      w: 360,
-      h: Math.max(MIN_CARD_H, HEADER + sectionItems(sec.key).length * ROW + 16)
-    };
-    const lo = base[sec.key] || fallback;
-    layout[sec.key] = {
-      x: snap(lo.x),
-      y: snap(lo.y),
-      w: snapSize(lo.w, MIN_CARD_W),
-      h: snapSize(lo.h, MIN_CARD_H)
-    };
-  });
-  return layout;
 }
 
 // ── STORAGE ───────────────────────────────────────────
 function load() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY);
     state = saved ? normalizeState(JSON.parse(saved)) : normalizeState({});
-    if (!Object.keys(state.layout || {}).length) state.layout = defaultLayout();
+    if (!Object.keys(state.layout || {}).length || state.sections.some(sec => !state.layout[sec.key])) state.layout = defaultLayout();
     saveNow();
   } catch(e) {
     state = normalizeState({});
@@ -846,8 +829,8 @@ function delItem(sec,idx){
   sectionItems(sec).splice(idx,1);
   renderAll(); save();
 }
-function resetLayout(){ state.layout = defaultLayout(); renderAll(); save({immediate:true}); showToast('↔️ Distribución restaurada'); }
 function clearAll(){ if(!confirm('¿Limpiar todos los tildados?')) return; state.sections.forEach(sec=>sectionItems(sec.key).forEach(item=>item.checked=false)); renderAll(); save(); }
+function resetLayout(){ state.layout = defaultLayout(); renderAll(); save({immediate:true}); showToast('✅ Categorías ordenadas'); }
 function addItem(){
   const input=document.getElementById('add-input');
   const sel=document.getElementById('add-sec');
